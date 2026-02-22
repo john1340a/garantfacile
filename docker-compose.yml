@@ -1,0 +1,91 @@
+version: '3.9'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: garantfacile-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: garantfacile
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: garantfacile_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U garantfacile -d garantfacile_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: garantfacile-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: garantfacile-backend
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      DATABASE_URL: postgresql://garantfacile:password@postgres:5432/garantfacile_db
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
+      JWT_EXPIRES_IN: 7d
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-change-refresh-secret}
+      JWT_REFRESH_EXPIRES_IN: 30d
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      STRIPE_PRICE_MENSUEL: ${STRIPE_PRICE_MENSUEL:-}
+      STRIPE_PRICE_ANNUEL: ${STRIPE_PRICE_ANNUEL:-}
+      FILIGRANE_API_URL: ${FILIGRANE_API_URL:-}
+      FILIGRANE_API_KEY: ${FILIGRANE_API_KEY:-}
+      GARANTFACILE_API_URL: ${GARANTFACILE_API_URL:-}
+      GARANTFACILE_API_KEY: ${GARANTFACILE_API_KEY:-}
+      AES_ENCRYPTION_KEY: ${AES_ENCRYPTION_KEY:-fallback-key-32chars-placeholder!}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
+      UPLOAD_DIR: /app/uploads
+    volumes:
+      - uploads_data:/app/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: garantfacile-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3001/api}
+      NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY:-}
+      NEXT_PUBLIC_AXEPTIO_CLIENT_ID: ${NEXT_PUBLIC_AXEPTIO_CLIENT_ID:-}
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
+  redis_data:
+  uploads_data:
