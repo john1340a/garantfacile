@@ -15,6 +15,8 @@ export function removeAuthToken(): void {
   localStorage.removeItem(TOKEN_KEY);
 }
 
+// NOTE: This is a client-side convenience check only (UX - avoids unnecessary API calls).
+// Actual authorization and token signature verification is always performed by the backend.
 export function isAuthenticated(): boolean {
   const token = getAuthToken();
   if (!token) return false;

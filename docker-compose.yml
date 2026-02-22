@@ -59,7 +59,7 @@ services:
       FILIGRANE_API_KEY: ${FILIGRANE_API_KEY:-}
       GARANTFACILE_API_URL: ${GARANTFACILE_API_URL:-}
       GARANTFACILE_API_KEY: ${GARANTFACILE_API_KEY:-}
-      AES_ENCRYPTION_KEY: ${AES_ENCRYPTION_KEY:-fallback-key-32chars-placeholder!}
+      AES_ENCRYPTION_KEY: ${AES_ENCRYPTION_KEY:-fallback-key-32chars-placeholder}
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
       UPLOAD_DIR: /app/uploads
     volumes:

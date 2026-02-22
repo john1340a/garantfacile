@@ -98,7 +98,10 @@ export class RgpdService {
   private getAesKey(): Buffer {
     const raw = process.env.AES_ENCRYPTION_KEY;
     if (!raw) throw new Error('AES_ENCRYPTION_KEY environment variable is not set');
-    return Buffer.from(raw.padEnd(32).slice(0, 32));
+    if (raw.length !== 32) {
+      throw new Error('AES_ENCRYPTION_KEY must be exactly 32 characters for AES-256');
+    }
+    return Buffer.from(raw);
   }
 
   async encryptSensitiveData(data: string): Promise<string> {
