@@ -4,12 +4,14 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .npm
+.pnpm-store/
 
 # Build outputs
 dist/
 .next/
 out/
 build/
+*.tsbuildinfo
 
 # Environment files
 .env
@@ -17,29 +19,38 @@ build/
 .env.development.local
 .env.test.local
 .env.production.local
+.env.backend
+*.env
 
-# Uploads
+# Uploads & Data
 backend/uploads/
-
-# Prisma
 backend/prisma/migrations/dev.db
+backend/prisma/dev.db
 
-# IDE
+# Playwright & Tests
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+playwright/.auth/
+coverage/
+
+# Scripts temporaires & Debug
+read_odt.ps1
+read_odt_v2.ps1
+cdc_clean.txt
+test_output.txt
+test_output_utf8.txt
+dist-test-tailwind.css
+
+# IDE & OS
 .vscode/
 .idea/
 *.swp
 *.swo
-
-# OS
 .DS_Store
 Thumbs.db
-
-# Test coverage
-coverage/
 
 # Logs
 logs/
 *.log
-
-# TypeScript build info
-*.tsbuildinfo

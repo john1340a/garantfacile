@@ -1,19 +1,26 @@
 import type { Metadata } from 'next';
 import Script from 'next/script';
+import { HeroUIProvider } from "@heroui/react";
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'GarantFacile - Trouvez votre garant en toute confiance',
+  title: 'GarantEasy - Trouvez votre garant en toute simplicité',
   description:
-    'Plateforme SaaS mettant en relation locataires et propriétaires avec un service de garant premium vérifié.',
-  keywords: ['garant', 'locataire', 'location', 'caution', 'garantie loyer'],
+    'La garantie locative simplifiée. GarantEasy met en relation locataires et garants physiques vérifiés.',
+  keywords: ['garant', 'locataire', 'location', 'caution', 'garantie loyer', 'garanteasy'],
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const axeptioClientId = process.env.NEXT_PUBLIC_AXEPTIO_CLIENT_ID;
 
   return (
-    <html lang="fr">
+    <html lang="fr" className='light'>
+      <head>
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+        />
+      </head>
       <body>
         {/* Axeptio GDPR consent banner */}
         {axeptioClientId && (
@@ -24,7 +31,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               __html: `
                 window.axeptioSettings = {
                   clientId: "${axeptioClientId}",
-                  cookiesVersion: "garantfacile-fr",
+                  cookiesVersion: "garanteasy-fr",
                   googleConsentMode: {
                     default: {
                       analytics_storage: "denied",
@@ -44,7 +51,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             }}
           />
         )}
-        <main>{children}</main>
+        <HeroUIProvider>
+          <main>{children}</main>
+        </HeroUIProvider>
       </body>
     </html>
   );

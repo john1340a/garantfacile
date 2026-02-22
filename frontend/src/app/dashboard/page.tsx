@@ -1,9 +1,28 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
+import { 
+  Card, 
+  CardHeader, 
+  CardBody, 
+  Divider, 
+  Button, 
+  Chip, 
+  Spacer,
+  Link as HeroLink,
+  Table,
+  TableHeader,
+  TableColumn,
+  TableBody,
+  TableRow,
+  TableCell,
+  User as HeroUser,
+  Spinner
+} from '@heroui/react';
 import Link from 'next/link';
 import { apiClient } from '@/lib/api';
 import { getAuthToken } from '@/lib/auth';
+import { Navigation } from '@/components/Navigation';
 
 interface Garant {
   id: string;
@@ -65,248 +84,225 @@ export default function DashboardPage() {
     }
   }
 
-  const statusBadge = (status: string) => {
-    const colors: Record<string, string> = {
-      DONE: '#10b981',
-      PROCESSING: '#f59e0b',
-      PENDING: '#6b7280',
-      ERROR: '#ef4444',
-      ACTIF: '#10b981',
-      ANNULE: '#ef4444',
-      EN_ATTENTE: '#f59e0b',
-    };
-    return (
-      <span
-        style={{
-          background: colors[status] || '#6b7280',
-          color: 'white',
-          padding: '0.15rem 0.6rem',
-          borderRadius: '9999px',
-          fontSize: '0.75rem',
-          fontWeight: '600',
-        }}
-      >
-        {status}
-      </span>
-    );
+  const getStatusColor = (status: string): "success" | "warning" | "default" | "danger" | "primary" | "secondary" => {
+    switch (status) {
+      case 'DONE':
+      case 'ACTIF':
+        return 'success';
+      case 'PROCESSING':
+      case 'EN_ATTENTE':
+        return 'warning';
+      case 'ERROR':
+      case 'ANNULE':
+        return 'danger';
+      default:
+        return 'default';
+    }
   };
 
   if (loading) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', padding: '4rem' }}>
-        <p>Chargement...</p>
+      <div className="flex flex-col items-center justify-center min-h-screen gap-4">
+        <Spinner size="lg" color="primary" label="Chargement de votre dashboard..." />
       </div>
     );
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f9fafb' }}>
-      {/* Header */}
-      <header
-        style={{
-          background: '#1e40af',
-          color: 'white',
-          padding: '1rem 2rem',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-        }}
-      >
-        <Link href="/" style={{ color: 'white', fontSize: '1.25rem', fontWeight: '700' }}>
-          🏠 GarantFacile
-        </Link>
-        <nav style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-          <Link href="/rgpd" style={{ color: 'white', fontSize: '0.9rem' }}>
-            Mes droits RGPD
-          </Link>
-          <span style={{ color: '#bfdbfe' }}>
-            {user ? `Bonjour, ${user.firstName}` : 'Dashboard'}
-          </span>
-        </nav>
-      </header>
+    <div className="min-h-screen bg-background">
+      <Navigation />
+      
+      <main className="max-w-7xl mx-auto px-6 py-12">
+        <header className="mb-12">
+          <h1 className="text-3xl font-bold flex items-center gap-2">
+            <span className="material-symbols-outlined text-primary text-4xl">dashboard</span>
+            Tableau de bord
+          </h1>
+          <p className="text-default-500 mt-2">
+            {user ? `Bienvenue, ${user.firstName}. Retrouvez ici vos garants et documents.` : 'Gérez votre location en toute simplicité.'}
+          </p>
+        </header>
 
-      <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '2rem' }}>
         {/* Subscription status */}
-        {abonnement && (
-          <div
-            style={{
-              background: 'white',
-              borderRadius: '0.75rem',
-              padding: '1.5rem',
-              marginBottom: '2rem',
-              border: '1px solid #e5e7eb',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-            }}
-          >
-            <div>
-              <h3 style={{ fontWeight: '700', marginBottom: '0.25rem' }}>Mon abonnement</h3>
-              <p style={{ color: '#6b7280' }}>
-                Plan {abonnement.plan} •{' '}
-                {abonnement.currentPeriodEnd
-                  ? `Renouvellement le ${new Date(abonnement.currentPeriodEnd).toLocaleDateString('fr-FR')}`
-                  : ''}
-              </p>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-              {statusBadge(abonnement.status)}
-              <Link
-                href="/checkout"
-                style={{
-                  background: '#1e40af',
-                  color: 'white',
-                  padding: '0.5rem 1rem',
-                  borderRadius: '0.375rem',
-                  fontSize: '0.9rem',
-                }}
-              >
-                Gérer
-              </Link>
-            </div>
-          </div>
-        )}
+        <section className="mb-12">
+          {abonnement ? (
+            <Card className="bg-primary/5 border-primary/20" shadow="sm">
+              <CardBody className="flex flex-row flex-wrap items-center justify-between gap-6 p-8">
+                <div className="flex items-center gap-6">
+                  <div className="bg-primary text-white p-4 rounded-2xl shadow-lg shadow-primary/30">
+                    <span className="material-symbols-outlined text-3xl">verified_user</span>
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold mb-1">Abonnement {abonnement.plan}</h3>
+                    <p className="text-default-500">
+                      {abonnement.currentPeriodEnd
+                        ? `Renouvellement le ${new Date(abonnement.currentPeriodEnd).toLocaleDateString('fr-FR')}`
+                        : 'Plan actif sans date de fin'}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-4">
+                  <Chip color={getStatusColor(abonnement.status)} variant="flat" className="capitalize">
+                    {abonnement.status.toLowerCase()}
+                  </Chip>
+                  <Button as={Link} href="/checkout" color="primary" variant="shadow">
+                    Gérer mon offre
+                  </Button>
+                </div>
+              </CardBody>
+            </Card>
+          ) : (
+            <Card className="bg-warning/5 border-warning/20" shadow="sm">
+              <CardBody className="flex flex-row flex-wrap items-center justify-between gap-6 p-8">
+                <div className="flex items-center gap-6">
+                  <div className="bg-warning text-white p-4 rounded-2xl shadow-lg shadow-warning/30">
+                    <span className="material-symbols-outlined text-3xl">warning</span>
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold mb-1">Aucun abonnement actif</h3>
+                    <p className="text-default-500">Souscrivez pour accéder à tous nos garants vérifiés et sécuriser votre dossier.</p>
+                  </div>
+                </div>
+                <Button as={Link} href="/checkout" color="warning" variant="shadow" className="text-white">
+                  S'abonner maintenant
+                </Button>
+              </CardBody>
+            </Card>
+          )}
+        </section>
 
-        {!abonnement && (
-          <div
-            style={{
-              background: '#eff6ff',
-              border: '1px solid #bfdbfe',
-              borderRadius: '0.75rem',
-              padding: '1.5rem',
-              marginBottom: '2rem',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-            }}
-          >
-            <div>
-              <h3 style={{ fontWeight: '700', color: '#1e40af' }}>Aucun abonnement actif</h3>
-              <p style={{ color: '#3b82f6' }}>Souscrivez pour accéder à tous nos garants vérifiés.</p>
-            </div>
-            <Link
-              href="/checkout"
-              style={{
-                background: '#1e40af',
-                color: 'white',
-                padding: '0.75rem 1.5rem',
-                borderRadius: '0.5rem',
-                fontWeight: '600',
-              }}
-            >
-              S&apos;abonner
-            </Link>
-          </div>
-        )}
-
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Guarantors list */}
-          <section
-            style={{
-              background: 'white',
-              borderRadius: '0.75rem',
-              padding: '1.5rem',
-              border: '1px solid #e5e7eb',
-            }}
-          >
-            <h2 style={{ fontSize: '1.25rem', fontWeight: '700', marginBottom: '1.5rem' }}>
-              Garants disponibles ({garants.length})
-            </h2>
-            {garants.length === 0 ? (
-              <p style={{ color: '#6b7280', textAlign: 'center', padding: '2rem' }}>
-                Aucun garant disponible actuellement.
-              </p>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                {garants.slice(0, 5).map((g) => (
-                  <Link
-                    key={g.id}
-                    href={`/garant/${g.id}`}
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      padding: '1rem',
-                      border: '1px solid #f3f4f6',
-                      borderRadius: '0.5rem',
-                      color: 'inherit',
-                    }}
-                  >
-                    <div>
-                      <div style={{ fontWeight: '600' }}>
-                        {g.user.firstName} {g.user.lastName[0]}.
-                      </div>
-                      <div style={{ color: '#6b7280', fontSize: '0.875rem' }}>
-                        {g.profession} • {g.revenuAnnuel?.toLocaleString('fr-FR')}€/an
-                      </div>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <span
-                        style={{
-                          background: '#dbeafe',
-                          color: '#1e40af',
-                          padding: '0.25rem 0.5rem',
-                          borderRadius: '0.25rem',
-                          fontSize: '0.75rem',
-                          fontWeight: '700',
-                        }}
-                      >
-                        Score: {g.score}/100
-                      </span>
-                      {g.disponible && (
-                        <span style={{ color: '#10b981', fontSize: '0.75rem' }}>✓ Dispo</span>
-                      )}
-                    </div>
-                  </Link>
-                ))}
+          <Card shadow="sm">
+            <CardHeader className="flex flex-col items-start gap-1 p-6">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-primary">group</span>
+                <h2 className="text-xl font-bold">Garants disponibles</h2>
               </div>
-            )}
-          </section>
+              <p className="text-small text-default-500">Profils vérifiés correspondant à votre recherche</p>
+            </CardHeader>
+            <Divider />
+            <CardBody className="p-0">
+              {garants.length === 0 ? (
+                <div className="flex flex-col items-center justify-center p-12 text-center text-default-400">
+                  <span className="material-symbols-outlined text-5xl mb-4">person_search</span>
+                  <p>Aucun garant disponible actuellement.</p>
+                </div>
+              ) : (
+                <div className="p-4 space-y-4">
+                  {garants.slice(0, 5).map((g) => (
+                    <Card 
+                      key={g.id} 
+                      isPressable 
+                      as={Link} 
+                      href={`/garant/${g.id}`}
+                      className="border-none bg-default-50 hover:bg-default-100 transition-colors w-full"
+                      shadow="none"
+                    >
+                      <CardBody className="flex flex-row items-center justify-between p-4">
+                        <HeroUser   
+                          name={`${g.user.firstName} ${g.user.lastName[0]}.`}
+                          description={g.profession}
+                          avatarProps={{
+                            src: `https://i.pravatar.cc/150?u=${g.id}`,
+                            color: "primary",
+                            isBordered: true
+                          }}
+                        />
+                        <div className="flex flex-col items-end gap-2">
+                          <Chip 
+                            color="secondary" 
+                            size="sm" 
+                            variant="flat"
+                            startContent={<span className="material-symbols-outlined text-tiny">star</span>}
+                          >
+                            Score: {g.score}
+                          </Chip>
+                          {g.disponible && (
+                            <span className="text-tiny text-success flex items-center gap-1 font-bold">
+                              <span className="material-symbols-outlined text-tiny">check_circle</span>
+                              Disponible
+                            </span>
+                          )}
+                        </div>
+                      </CardBody>
+                    </Card>
+                  ))}
+                  <div className="p-2 flex justify-center">
+                    <Button variant="light" color="primary" endContent={<span className="material-symbols-outlined">arrow_forward</span>}>
+                      Voir tous les garants
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </CardBody>
+          </Card>
 
           {/* Documents */}
-          <section
-            style={{
-              background: 'white',
-              borderRadius: '0.75rem',
-              padding: '1.5rem',
-              border: '1px solid #e5e7eb',
-            }}
-          >
-            <h2 style={{ fontSize: '1.25rem', fontWeight: '700', marginBottom: '1.5rem' }}>
-              Mes documents ({documents.length})
-            </h2>
-            {documents.length === 0 ? (
-              <p style={{ color: '#6b7280', textAlign: 'center', padding: '2rem' }}>
-                Aucun document téléversé.
-              </p>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                {documents.map((doc) => (
-                  <div
-                    key={doc.id}
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      padding: '0.75rem',
-                      border: '1px solid #f3f4f6',
-                      borderRadius: '0.5rem',
-                    }}
-                  >
-                    <div>
-                      <div style={{ fontWeight: '500', fontSize: '0.9rem' }}>{doc.filename}</div>
-                      <div style={{ color: '#6b7280', fontSize: '0.75rem' }}>
-                        {doc.type} • {new Date(doc.createdAt).toLocaleDateString('fr-FR')}
-                      </div>
-                    </div>
-                    {statusBadge(doc.status)}
-                  </div>
-                ))}
+          <Card shadow="sm">
+            <CardHeader className="flex flex-col items-start gap-1 p-6">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-primary">description</span>
+                <h2 className="text-xl font-bold">Mes documents</h2>
               </div>
-            )}
-          </section>
+              <p className="text-small text-default-500">Gérez vos justificatifs téléchargés</p>
+            </CardHeader>
+            <Divider />
+            <CardBody className="p-0">
+              {documents.length === 0 ? (
+                <div className="flex flex-col items-center justify-center p-12 text-center text-default-400">
+                  <span className="material-symbols-outlined text-5xl mb-4">upload_file</span>
+                  <p>Aucun document téléversé.</p>
+                  <Button color="primary" variant="flat" className="mt-4" startContent={<span className="material-symbols-outlined">add</span>}>
+                    Ajouter un document
+                  </Button>
+                </div>
+              ) : (
+                <Table aria-label="Table des documents" removeWrapper className="p-2">
+                  <TableHeader>
+                    <TableColumn>DOCUMENT</TableColumn>
+                    <TableColumn>DATE</TableColumn>
+                    <TableColumn>STATUT</TableColumn>
+                  </TableHeader>
+                  <TableBody>
+                    {documents.map((doc) => (
+                      <TableRow key={doc.id}>
+                        <TableCell>
+                          <div className="flex flex-col">
+                            <span className="text-small font-bold">{doc.filename}</span>
+                            <span className="text-tiny text-default-400">{doc.type}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-tiny">
+                          {new Date(doc.createdAt).toLocaleDateString('fr-FR')}
+                        </TableCell>
+                        <TableCell>
+                          <Chip 
+                            color={getStatusColor(doc.status)} 
+                            size="sm" 
+                            variant="flat"
+                            className="capitalize"
+                          >
+                            {doc.status.toLowerCase()}
+                          </Chip>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardBody>
+          </Card>
         </div>
-      </div>
+      </main>
+      
+      <Spacer y={12} />
+      <footer className="py-12 px-6 border-t border-divider text-center text-default-400 bg-default-50">
+        <p className="flex items-center justify-center gap-2">
+          <span className="material-symbols-outlined">security</span>
+          Interface sécurisée GarantFacile © {new Date().getFullYear()}
+        </p>
+      </footer>
     </div>
   );
 }

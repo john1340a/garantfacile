@@ -1,12 +1,25 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
+import { 
+  Card, 
+  CardBody, 
+  CardHeader, 
+  Button, 
+  Divider, 
+  Spacer, 
+  Checkbox,
+  Link as HeroLink,
+  Spinner,
+  cn
+} from '@heroui/react';
 import Link from 'next/link';
 import { getAuthToken } from '@/lib/auth';
+import { Navigation } from '@/components/Navigation';
 
 export default function RgpdPage() {
   const [loading, setLoading] = useState<string | null>(null);
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState<{ type: 'success' | 'danger', text: string } | null>(null);
   const [exportData, setExportData] = useState<any>(null);
   const [consent, setConsent] = useState({
     consentMarketing: false,
@@ -37,13 +50,13 @@ export default function RgpdPage() {
 
   const handleExport = async () => {
     setLoading('export');
-    setMessage('');
+    setMessage(null);
     try {
       const data = await apiFetch('/rgpd/export');
       setExportData(data);
-      setMessage('✅ Export généré avec succès');
+      setMessage({ type: 'success', text: 'Export généré avec succès. Vous pouvez maintenant le télécharger.' });
     } catch (e: any) {
-      setMessage(`❌ ${e.message}`);
+      setMessage({ type: 'danger', text: e.message });
     } finally {
       setLoading(null);
     }
@@ -52,12 +65,12 @@ export default function RgpdPage() {
   const handleDelete = async () => {
     if (!confirm('Êtes-vous sûr de vouloir supprimer toutes vos données ? Cette action est irréversible.')) return;
     setLoading('delete');
-    setMessage('');
+    setMessage(null);
     try {
       const data = await apiFetch('/rgpd/delete', 'DELETE');
-      setMessage(`✅ ${data.message}`);
+      setMessage({ type: 'success', text: data.message });
     } catch (e: any) {
-      setMessage(`❌ ${e.message}`);
+      setMessage({ type: 'danger', text: e.message });
     } finally {
       setLoading(null);
     }
@@ -65,12 +78,12 @@ export default function RgpdPage() {
 
   const handleConsentUpdate = async () => {
     setLoading('consent');
-    setMessage('');
+    setMessage(null);
     try {
       await apiFetch('/rgpd/consent', 'PUT', consent);
-      setMessage('✅ Préférences de consentement mises à jour');
+      setMessage({ type: 'success', text: 'Vos préférences de consentement ont été mises à jour.' });
     } catch (e: any) {
-      setMessage(`❌ ${e.message}`);
+      setMessage({ type: 'danger', text: e.message });
     } finally {
       setLoading(null);
     }
@@ -88,148 +101,144 @@ export default function RgpdPage() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f9fafb' }}>
-      <header
-        style={{
-          background: '#1e40af',
-          color: 'white',
-          padding: '1rem 2rem',
-          display: 'flex',
-          gap: '1rem',
-          alignItems: 'center',
-        }}
-      >
-        <Link href="/dashboard" style={{ color: 'white' }}>
-          ← Retour
-        </Link>
-        <span style={{ fontWeight: '700', fontSize: '1.25rem' }}>🏠 GarantFacile</span>
-      </header>
+    <div className="min-h-screen bg-background pb-20">
+      <Navigation />
 
-      <div style={{ maxWidth: '800px', margin: '2rem auto', padding: '0 1rem' }}>
-        <h1 style={{ fontSize: '2rem', fontWeight: '800', marginBottom: '0.5rem' }}>
-          Mes droits RGPD
-        </h1>
-        <p style={{ color: '#6b7280', marginBottom: '2rem' }}>
-          Conformément au Règlement Général sur la Protection des Données (RGPD), vous disposez de
-          droits sur vos données personnelles (ARCO : Accès, Rectification, Effacement, Opposition).
-        </p>
+      <main className="max-w-4xl mx-auto px-6 pt-12">
+        <header className="mb-12">
+          <h1 className="text-4xl font-black mb-4">Mes droits RGPD</h1>
+          <p className="text-xl text-default-500 max-w-2xl leading-relaxed">
+            Conformément au Règlement Général sur la Protection des Données (RGPD), vous disposez de
+            droits essentiels sur vos données personnelles (Accès, Rectification, Effacement, Opposition).
+          </p>
+        </header>
 
         {message && (
-          <div
-            style={{
-              background: message.startsWith('✅') ? '#d1fae5' : '#fee2e2',
-              border: `1px solid ${message.startsWith('✅') ? '#6ee7b7' : '#fca5a5'}`,
-              borderRadius: '0.5rem',
-              padding: '1rem',
-              marginBottom: '1.5rem',
-              color: message.startsWith('✅') ? '#065f46' : '#b91c1c',
-            }}
-          >
-            {message}
-          </div>
+          <Card className={cn("mb-8 border-none shadow-lg", message.type === 'success' ? "bg-success/10" : "bg-danger/10")}>
+            <CardBody className="flex flex-row items-center gap-4 py-4 px-6 font-medium">
+              <span className={cn("material-symbols-outlined", message.type === 'success' ? "text-success" : "text-danger")}>
+                {message.type === 'success' ? 'check_circle' : 'error'}
+              </span>
+              <p className={cn(message.type === 'success' ? "text-success-700" : "text-danger-700")}>
+                {message.text}
+              </p>
+            </CardBody>
+          </Card>
         )}
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+        <div className="grid gap-8">
           {/* Right of access */}
           <RightCard
-            icon="📂"
-            title="Droit d'accès (Article 15 RGPD)"
-            description="Téléchargez l'intégralité de vos données personnelles stockées sur GarantFacile."
+            icon="folder_zip"
+            title="Droit d'accès (Article 15)"
+            description="Téléchargez l'intégralité de vos données personnelles stockées sur nos serveurs en un clic."
           >
-            <div style={{ display: 'flex', gap: '1rem' }}>
-              <button
-                onClick={handleExport}
-                disabled={loading === 'export'}
-                style={buttonStyle('#1e40af', loading === 'export')}
+            <div className="flex flex-wrap gap-4 mt-6">
+              <Button
+                onPress={handleExport}
+                isLoading={loading === 'export'}
+                color="primary"
+                variant="shadow"
+                className="font-bold"
+                startContent={!loading && <span className="material-symbols-outlined text-small">download</span>}
               >
-                {loading === 'export' ? 'Export...' : 'Exporter mes données'}
-              </button>
+                Générer mon export
+              </Button>
               {exportData && (
-                <button onClick={downloadExport} style={buttonStyle('#059669', false)}>
+                <Button 
+                  onPress={downloadExport} 
+                  color="success" 
+                  variant="flat"
+                  className="font-bold"
+                  startContent={<span className="material-symbols-outlined text-small">file_download</span>}
+                >
                   Télécharger le fichier JSON
-                </button>
+                </Button>
               )}
             </div>
           </RightCard>
 
           {/* Consent management */}
           <RightCard
-            icon="⚙️"
-            title="Gestion du consentement (Article 7 RGPD)"
-            description="Gérez vos préférences de traitement des données personnelles."
+            icon="settings_suggest"
+            title="Gestion du consentement (Article 7)"
+            description="Contrôlez la manière dont nous traitons vos informations."
           >
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1rem' }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer' }}>
-                <input
-                  type="checkbox"
-                  checked={consent.consentMarketing}
-                  onChange={(e) => setConsent({ ...consent, consentMarketing: e.target.checked })}
-                  style={{ width: '1rem', height: '1rem' }}
-                />
-                <span>
-                  <strong>Consentement marketing</strong> — Recevoir des offres et actualités par email
-                </span>
-              </label>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                <input
-                  type="checkbox"
-                  checked={consent.consentRgpd}
-                  disabled
-                  style={{ width: '1rem', height: '1rem' }}
-                />
-                <span>
-                  <strong>Consentement RGPD</strong> — Traitement nécessaire au fonctionnement du service (obligatoire)
-                </span>
-              </label>
+            <div className="space-y-4 mt-6">
+              <Checkbox
+                isSelected={consent.consentMarketing}
+                onValueChange={(isSelected) => setConsent({ ...consent, consentMarketing: isSelected })}
+                classNames={{ label: "text-default-700 font-medium" }}
+              >
+                Marketing — Recevoir nos offres et actualités par email
+              </Checkbox>
+              <Checkbox
+                isSelected={consent.consentRgpd}
+                isDisabled
+                classNames={{ label: "text-default-400 font-medium italic" }}
+              >
+                Fonctionnement — Traitement nécessaire au service (Obligatoire)
+              </Checkbox>
             </div>
-            <button
-              onClick={handleConsentUpdate}
-              disabled={loading === 'consent'}
-              style={buttonStyle('#7c3aed', loading === 'consent')}
+            <Spacer y={6} />
+            <Button
+              onPress={handleConsentUpdate}
+              isLoading={loading === 'consent'}
+              color="secondary"
+              variant="flat"
+              className="font-bold"
+              startContent={!loading && <span className="material-symbols-outlined text-small">save</span>}
             >
-              {loading === 'consent' ? 'Mise à jour...' : 'Mettre à jour mes préférences'}
-            </button>
+              Enregistrer mes préférences
+            </Button>
           </RightCard>
 
           {/* Right to erasure */}
           <RightCard
-            icon="🗑️"
-            title="Droit à l'effacement (Article 17 RGPD)"
-            description="Supprimez définitivement toutes vos données personnelles. Cette action est irréversible."
+            icon="delete_forever"
+            title="Droit à l'effacement (Article 17)"
+            description="Supprimez définitivement votre compte et toutes ses données. Attention, cette action est irréversible."
             danger
           >
-            <button
-              onClick={handleDelete}
-              disabled={loading === 'delete'}
-              style={buttonStyle('#dc2626', loading === 'delete')}
-            >
-              {loading === 'delete' ? 'Suppression...' : 'Supprimer mes données'}
-            </button>
+            <div className="mt-6">
+              <Button
+                onPress={handleDelete}
+                isLoading={loading === 'delete'}
+                color="danger"
+                variant="light"
+                className="font-bold border-1 border-danger"
+                startContent={!loading && <span className="material-symbols-outlined text-small">warning</span>}
+              >
+                Supprimer mes données définitivement
+              </Button>
+            </div>
           </RightCard>
 
           {/* Contact DPO */}
-          <RightCard
-            icon="✉️"
-            title="Contacter notre DPO"
-            description="Pour toute demande relative à vos droits RGPD ou pour exercer le droit d'opposition (Article 21) et de rectification (Article 16)."
-          >
-            <a
-              href="mailto:dpo@garantfacile.fr"
-              style={{
-                display: 'inline-block',
-                background: '#6b7280',
-                color: 'white',
-                padding: '0.625rem 1.25rem',
-                borderRadius: '0.375rem',
-                fontWeight: '600',
-                fontSize: '0.9rem',
-              }}
-            >
-              Contacter dpo@garantfacile.fr
-            </a>
-          </RightCard>
+          <Card className="bg-default-50 border-none" shadow="none">
+            <CardBody className="p-8 flex flex-col sm:flex-row items-center gap-6">
+              <div className="w-16 h-16 rounded-full bg-default-200 flex items-center justify-center text-default-600">
+                <span className="material-symbols-outlined text-3xl">contact_mail</span>
+              </div>
+              <div className="flex-1 text-center sm:text-left">
+                <h3 className="text-xl font-bold mb-1">Besoin d&apos;assistance ?</h3>
+                <p className="text-default-500 text-small mb-4 sm:mb-0">
+                  Contactez notre Délégué à la Protection des Données pour toute question sur vos droits ou pour exercer votre droit de rectification.
+                </p>
+              </div>
+              <Button 
+                as="a" 
+                href="mailto:dpo@garantfacile.fr"
+                variant="shadow"
+                color="default"
+                className="font-bold"
+              >
+                Contacter le DPO
+              </Button>
+            </CardBody>
+          </Card>
         </div>
-      </div>
+      </main>
     </div>
   );
 }
@@ -248,37 +257,31 @@ function RightCard({
   danger?: boolean;
 }) {
   return (
-    <div
-      style={{
-        background: 'white',
-        border: `1px solid ${danger ? '#fca5a5' : '#e5e7eb'}`,
-        borderRadius: '0.75rem',
-        padding: '1.5rem',
-      }}
+    <Card 
+      className={cn(
+        "border-1", 
+        danger ? "border-danger/10 bg-danger/5" : "border-default-100 shadow-sm"
+      )}
     >
-      <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem', marginBottom: '1rem' }}>
-        <span style={{ fontSize: '1.5rem' }}>{icon}</span>
-        <div>
-          <h3 style={{ fontWeight: '700', marginBottom: '0.25rem', color: danger ? '#b91c1c' : '#111827' }}>
-            {title}
-          </h3>
-          <p style={{ color: '#6b7280', fontSize: '0.9rem' }}>{description}</p>
+      <CardBody className="p-8">
+        <div className="flex items-start gap-4">
+          <div className={cn(
+            "p-3 rounded-2xl",
+            danger ? "bg-danger text-white" : "bg-primary-100 text-primary"
+          )}>
+            <span className="material-symbols-outlined block text-2xl">{icon}</span>
+          </div>
+          <div className="flex-1">
+            <h3 className={cn("text-xl font-black mb-1", danger ? "text-danger" : "text-default-900")}>
+              {title}
+            </h3>
+            <p className="text-default-500 font-medium text-small leading-relaxed">{description}</p>
+          </div>
         </div>
-      </div>
-      {children}
-    </div>
+        <div className="pl-0 sm:pl-16">
+          {children}
+        </div>
+      </CardBody>
+    </Card>
   );
-}
-
-function buttonStyle(bg: string, disabled: boolean) {
-  return {
-    background: disabled ? '#9ca3af' : bg,
-    color: 'white',
-    border: 'none',
-    padding: '0.625rem 1.25rem',
-    borderRadius: '0.375rem',
-    fontWeight: '600' as const,
-    fontSize: '0.9rem',
-    cursor: disabled ? 'not-allowed' as const : 'pointer' as const,
-  };
 }
