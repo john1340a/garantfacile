@@ -11,7 +11,7 @@ export const Footer = () => {
           <span className="material-symbols-outlined">home_work</span>
           GarantEasy
         </div>
-        <p className="mb-8">© 2024 GarantFacile. Tous droits réservés.</p>
+        <p className="mb-8">© {new Date().getFullYear()} GarantEasy. Tous droits réservés.</p>
         <div className="flex justify-center flex-wrap gap-6">
           <Link href="/rgpd" className="text-slate-400 hover:text-white transition-colors flex items-center gap-2">
             <span className="material-symbols-outlined text-lg">policy</span>
